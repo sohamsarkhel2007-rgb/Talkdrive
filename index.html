@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebChat - Direct Messaging</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- SCREEN 1: CHATS LIST (WhatsApp Home Screen) -->
+        <div class="screen" id="chats-screen">
+            <div class="app-header">
+                <h2>Chats</h2>
+                <span id="my-name-display"></span>
+            </div>
+            
+            <div class="section-title">Online Contacts (Tap to Chat)</div>
+            <ul class="contacts-list" id="contacts-list">
+                <!-- Dynamically populated contacts -->
+            </ul>
+        </div>
+
+        <!-- SCREEN 2: 1-ON-1 PRIVATE CHAT WINDOW -->
+        <div class="screen hidden" id="conversation-screen">
+            <div class="chat-header">
+                <button id="back-btn">←</button>
+                <div class="profile-pic" id="chat-partner-avatar">?</div>
+                <div class="chat-title">
+                    <h3 id="chat-partner-name">User</h3>
+                    <p id="chat-partner-status">Online</p>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chat-messages"></div>
+
+            <!-- Emoji Picker -->
+            <div class="emoji-picker" id="emoji-picker">
+                <span>😀</span><span>😂</span><span>😍</span><span>🔥</span>
+                <span>👍</span><span>❤️</span><span>🎉</span><span>😎</span>
+            </div>
+
+            <div class="chat-input-area">
+                <button id="emoji-btn" title="Choose Emoji">😊</button>
+                <input type="file" id="image-input" accept="image/*" style="display: none;">
+                <button id="attach-btn" title="Send Image">📎</button>
+                <button id="record-btn" title="Record Audio">🎙️</button>
+                
+                <input type="text" placeholder="Type a message..." id="message-input">
+                <button id="send-btn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
