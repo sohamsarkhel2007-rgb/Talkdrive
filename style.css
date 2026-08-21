@@ -1,0 +1,214 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #d1d7db;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.app-container {
+    width: 420px;
+    height: 640px;
+    background-color: #efeae2;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    position: relative;
+}
+
+.screen {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+}
+
+.screen.hidden {
+    display: none;
+}
+
+/* App Header */
+.app-header {
+    background-color: #008069;
+    color: white;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.app-header h2 { font-size: 18px; }
+#my-name-display { font-size: 13px; opacity: 0.9; }
+
+.section-title {
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #667781;
+    background-color: #f0f2f5;
+    text-transform: uppercase;
+}
+
+/* Contacts List */
+.contacts-list {
+    list-style: none;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    gap: 12px;
+    border-bottom: 1px solid #f0f2f5;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.contact-item:hover {
+    background-color: #f5f6f6;
+}
+
+.avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: #128c7e;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.contact-info h4 { font-size: 15px; color: #111b21; }
+.contact-info p { font-size: 12px; color: #667781; }
+
+/* Conversation Screen Header */
+#conversation-screen { background-color: #efeae2; }
+
+.chat-header {
+    background-color: #008069;
+    color: white;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#back-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.profile-pic {
+    width: 36px;
+    height: 36px;
+    background-color: #128c7e;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+}
+
+.chat-title h3 { font-size: 15px; }
+.chat-title p { font-size: 11px; color: #aebac1; }
+
+.chat-messages {
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+}
+
+/* Chat Messages */
+.message {
+    max-width: 75%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    word-break: break-word;
+}
+
+.message.sent { background-color: #d9fdd3; align-self: flex-end; border-top-right-radius: 0; }
+.message.received { background-color: #ffffff; align-self: flex-start; border-top-left-radius: 0; }
+
+.chat-img { max-width: 100%; max-height: 180px; border-radius: 6px; margin: 4px 0; }
+audio { max-width: 200px; height: 36px; margin: 4px 0; }
+.time { font-size: 10px; color: #667781; align-self: flex-end; margin-top: 2px; }
+
+/* Input Bar */
+.chat-input-area {
+    padding: 10px;
+    background-color: #f0f2f5;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.chat-input-area input[type="text"] {
+    flex: 1;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 20px;
+    outline: none;
+    font-size: 14px;
+}
+
+#emoji-btn, #attach-btn, #record-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+#record-btn.recording { color: red; }
+
+#send-btn {
+    background-color: #00a884;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.emoji-picker {
+    position: absolute;
+    bottom: 55px;
+    left: 10px;
+    background: white;
+    border-radius: 8px;
+    padding: 8px;
+    display: none;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.emoji-picker span { font-size: 20px; cursor: pointer; text-align: center; }
+.emoji-picker.active { display: grid; }
