@@ -28,9 +28,16 @@ io.on('connection', (socket) => {
         io.emit('updateUserList', users);
     });
 
-    socket.on('privateMessage', (data) => {
+   socket.on('privateMessage', (data) => {
+        const targetSocket = io.sockets.sockets.get(data.targetSocketId);
+        
+        // Check if recipient is online
+        const isOnline = targetSocket ? true : false;
+        data.status = isOnline ? 'delivered' : 'sent'; // 'delivered' = double tick, 'sent' = single tick
+
         io.to(data.targetSocketId).emit('privateMessage', data);
         socket.emit('privateMessage', data);
+    });
     });
 
     socket.on('callUser', (data) => {
