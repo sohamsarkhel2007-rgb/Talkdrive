@@ -128,10 +128,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderSingleMessage(data) {
-        if (!chatMessages) return;
-        const isSelf = data.senderId === socket.id;
-        const msgDiv = document.createElement('div');
-        msgDiv.classList.add('message', isSelf ? 'sent' : 'received');
+    if (!chatMessages) return;
+    const isSelf = data.senderId === socket.id;
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('message', isSelf ? 'sent' : 'received');
+
+    let content = '';
+    if (data.image) content += `<img src="${data.image}" class="chat-img" style="max-width: 100%; border-radius: 8px; margin-bottom: 5px;" />`;
+    if (data.audio) content += `<audio controls src="${data.audio}" style="max-width: 100%; margin-bottom: 5px;"></audio>`;
+    if (data.text) content += `<p>${data.text}</p>`;
+    
+    // Status Ticks for Sent Messages
+    let tickHtml = '';
+    if (isSelf) {
+        tickHtml = data.status === 'delivered' ? ' <span style="color: #38bdf8;">✓✓</span>' : ' <span style="color: #94a3b8;">✓</span>';
+    }
+
+    content += `<span class="time">${data.time}${tickHtml}</span>`;
+
+    msgDiv.innerHTML = content;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 
         let content = '';
         if (data.image) content += `<img src="${data.image}" class="chat-img" style="max-width: 100%; border-radius: 8px; margin-bottom: 5px;" />`;
