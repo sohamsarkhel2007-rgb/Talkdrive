@@ -190,20 +190,21 @@ body {
     border-color: var(--neon-cyan);
 }
 
-/* Chat Messages with Cyber Grid Wallpaper */
+/* Visible Cyber Grid Wallpaper */
 .messages-container {
     flex: 1;
-    background-color: var(--bg-chat);
+    background-color: #04060a;
     background-image: 
-        radial-gradient(rgba(0, 243, 255, 0.08) 1px, transparent 0),
-        radial-gradient(rgba(255, 0, 127, 0.05) 1px, transparent 0);
-    background-size: 24px 24px;
-    background-position: 0 0, 12px 12px;
+        linear-gradient(rgba(0, 243, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 243, 255, 0.08) 1px, transparent 1px);
+    background-size: 30px 30px;
+    background-position: -1px -1px;
     padding: 20px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 12px;
+}
 }
 }
 
