@@ -1,11 +1,10 @@
 const socket = io();
-const msgSound = document.getElementById('msg-sound');
-const ringSound = document.getElementById('ring-sound');
+
 document.addEventListener("DOMContentLoaded", () => {
     // 1. User Registration Prompt
     const userName = prompt("Enter your name:") || "Anonymous";
 
-    // 2. DOM Elements Selection
+    // 2. DOM Elements
     const chatsScreen = document.getElementById('chats-screen');
     const conversationScreen = document.getElementById('conversation-screen');
     const contactsList = document.getElementById('contacts-list');
@@ -35,6 +34,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const callUserName = document.getElementById('call-user-name');
     const callStatusText = document.getElementById('call-status-text');
 
+    // Sound Elements
+    const msgSound = document.getElementById('msg-sound');
+    const ringSound = document.getElementById('ring-sound');
+
     // State Variables
     let activePartner = null;
     const conversations = {};
@@ -46,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let peerConnection = null;
     let incomingCallData = null;
 
-    // WebRTC Configuration with STUN & TURN Relays
+    // WebRTC Configuration
     const rtcConfig = {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
@@ -128,34 +131,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderSingleMessage(data) {
-    if (!chatMessages) return;
-    const isSelf = data.senderId === socket.id;
-    const msgDiv = document.createElement('div');
-    msgDiv.classList.add('message', isSelf ? 'sent' : 'received');
-
-    let content = '';
-    if (data.image) content += `<img src="${data.image}" class="chat-img" style="max-width: 100%; border-radius: 8px; margin-bottom: 5px;" />`;
-    if (data.audio) content += `<audio controls src="${data.audio}" style="max-width: 100%; margin-bottom: 5px;"></audio>`;
-    if (data.text) content += `<p>${data.text}</p>`;
-    
-    // Status Ticks for Sent Messages
-    let tickHtml = '';
-    if (isSelf) {
-        tickHtml = data.status === 'delivered' ? ' <span style="color: #38bdf8;">✓✓</span>' : ' <span style="color: #94a3b8;">✓</span>';
-    }
-
-    content += `<span class="time">${data.time}${tickHtml}</span>`;
-
-    msgDiv.innerHTML = content;
-    chatMessages.appendChild(msgDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
+        if (!chatMessages) return;
+        const isSelf = data.senderId === socket.id;
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('message', isSelf ? 'sent' : 'received');
 
         let content = '';
         if (data.image) content += `<img src="${data.image}" class="chat-img" style="max-width: 100%; border-radius: 8px; margin-bottom: 5px;" />`;
         if (data.audio) content += `<audio controls src="${data.audio}" style="max-width: 100%; margin-bottom: 5px;"></audio>`;
         if (data.text) content += `<p>${data.text}</p>`;
-        content += `<span class="time">${data.time}</span>`;
+
+        // Status Ticks (✓✓ Blue for online/delivered, ✓ Grey for sent)
+        let tickHtml = '';
+        if (isSelf) {
+            tickHtml = data.status === 'delivered' ? ' <span style="color: #38bdf8;">✓✓</span>' : ' <span style="color: #94a3b8;">✓</span>';
+        }
+
+        content += `<span class="time">${data.time}${tickHtml}</span>`;
 
         msgDiv.innerHTML = content;
         chatMessages.appendChild(msgDiv);
@@ -166,6 +158,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const partnerId = (data.senderId === socket.id) ? data.targetSocketId : data.senderId;
         if (!conversations[partnerId]) conversations[partnerId] = [];
         conversations[partnerId].push(data);
+
+        // Play message notification sound for incoming messages
+        if (data.senderId !== socket.id && msgSound) {
+            msgSound.play().catch(() => {});
+        }
 
         if (activePartner && activePartner.socketId === partnerId) {
             renderSingleMessage(data);
@@ -262,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // WebRTC Calls
+    // WebRTC Calling Engine
     async function startCall(isVideo) {
         if (!activePartner) return;
         try {
@@ -314,11 +311,21 @@ document.addEventListener("DOMContentLoaded", () => {
         if (callUserName) callUserName.textContent = data.senderName;
         if (callStatusText) callStatusText.textContent = data.isVideo ? "Incoming Video Call..." : "Incoming Voice Call...";
         if (acceptCallBtn) acceptCallBtn.classList.remove('hidden');
+
+        // Play Ringtone
+        if (ringSound) ringSound.play().catch(() => {});
     });
 
     if (acceptCallBtn) {
         acceptCallBtn.addEventListener('click', async () => {
             if (!incomingCallData) return;
+
+            // Stop Ringtone
+            if (ringSound) {
+                ringSound.pause();
+                ringSound.currentTime = 0;
+            }
+
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: incomingCallData.isVideo });
                 if (localVideo) {
@@ -378,6 +385,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function endCallUI() {
+        if (ringSound) {
+            ringSound.pause();
+            ringSound.currentTime = 0;
+        }
         if (peerConnection) {
             peerConnection.close();
             peerConnection = null;
