@@ -1,7 +1,6 @@
 const socket = io();
 const userName = prompt("Enter your name:") || "Anonymous";
 
-// UI Elements
 const chatsScreen = document.getElementById('chats-screen');
 const conversationScreen = document.getElementById('conversation-screen');
 const contactsList = document.getElementById('contacts-list');
@@ -19,19 +18,37 @@ const emojiBtn = document.getElementById('emoji-btn');
 const emojiPicker = document.getElementById('emoji-picker');
 const recordBtn = document.getElementById('record-btn');
 
-let activePartner = null; // { socketId, name }
-const conversations = {}; // Stores private history locally per socketId
+// Call elements
+const voiceCallBtn = document.getElementById('voice-call-btn');
+const videoCallBtn = document.getElementById('video-call-btn');
+const callModal = document.getElementById('call-modal');
+const localVideo = document.getElementById('local-video');
+const remoteVideo = document.getElementById('remote-video');
+const acceptCallBtn = document.getElementById('accept-call-btn');
+const endCallBtn = document.getElementById('end-call-btn');
+const callUserName = document.getElementById('call-user-name');
+const callStatusText = document.getElementById('call-status-text');
+
+let activePartner = null;
+const conversations = {};
+
+// WebRTC State
+let localStream = null;
+let peerConnection = null;
+let incomingCallData = null;
+
+const rtcConfig = {
+    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+};
 
 myNameDisplay.textContent = `Me: ${userName}`;
 socket.emit('registerUser', userName);
 
-// Render contacts screen
 socket.on('updateUserList', (users) => {
     contactsList.innerHTML = "";
-    
     let count = 0;
     for (let id in users) {
-        if (id === socket.id) continue; // Don't list self
+        if (id === socket.id) continue;
         count++;
 
         const li = document.createElement('li');
@@ -43,17 +60,14 @@ socket.on('updateUserList', (users) => {
                 <p>Tap to start chatting</p>
             </div>
         `;
-
         li.addEventListener('click', () => openConversation(id, users[id]));
         contactsList.appendChild(li);
     }
-
     if (count === 0) {
-        contactsList.innerHTML = `<li style="padding: 16px; color: #667781; font-size: 13px;">No other users online right now. Ask a friend to open the link!</li>`;
+        contactsList.innerHTML = `<li style="padding: 16px; color: #667781; font-size: 13px;">No other users online right now.</li>`;
     }
 });
 
-// Switch screens
 function openConversation(socketId, name) {
     activePartner = { socketId, name };
     chatPartnerName.textContent = name;
@@ -61,7 +75,6 @@ function openConversation(socketId, name) {
 
     chatsScreen.classList.add('hidden');
     conversationScreen.classList.remove('hidden');
-
     renderActiveMessages();
 }
 
@@ -74,7 +87,6 @@ backBtn.addEventListener('click', () => {
 function renderActiveMessages() {
     chatMessages.innerHTML = "";
     if (!activePartner) return;
-
     const msgs = conversations[activePartner.socketId] || [];
     msgs.forEach(msg => renderSingleMessage(msg));
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -96,25 +108,18 @@ function renderSingleMessage(data) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// Receive Private Direct Message
 socket.on('privateMessage', (data) => {
     const partnerId = (data.senderId === socket.id) ? data.targetSocketId : data.senderId;
-
-    if (!conversations[partnerId]) {
-        conversations[partnerId] = [];
-    }
+    if (!conversations[partnerId]) conversations[partnerId] = [];
     conversations[partnerId].push(data);
 
-    // If currently talking to sender, append immediately
     if (activePartner && activePartner.socketId === partnerId) {
         renderSingleMessage(data);
     }
 });
 
-// Send Private Payload
 function sendPrivatePayload(payload) {
     if (!activePartner) return;
-
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const data = {
         text: payload.text || "",
@@ -124,7 +129,6 @@ function sendPrivatePayload(payload) {
         senderId: socket.id,
         targetSocketId: activePartner.socketId
     };
-
     socket.emit('privateMessage', data);
 }
 
@@ -135,11 +139,8 @@ sendBtn.addEventListener('click', () => {
     messageInput.value = "";
 });
 
-messageInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendBtn.click();
-});
+messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendBtn.click(); });
 
-// Attachments & Extras
 emojiBtn.addEventListener('click', () => emojiPicker.classList.toggle('active'));
 emojiPicker.querySelectorAll('span').forEach(span => {
     span.addEventListener('click', () => {
@@ -159,7 +160,6 @@ imageInput.addEventListener('change', (e) => {
     imageInput.value = "";
 });
 
-// Audio Recorder
 let mediaRecorder, audioChunks = [], isRecording = false;
 recordBtn.addEventListener('click', async () => {
     if (!isRecording) {
@@ -185,3 +185,146 @@ recordBtn.addEventListener('click', async () => {
         recordBtn.classList.remove('recording');
     }
 });
+
+// --- WEBRTC VIDEO/VOICE CALL HANDLERS ---
+
+async function startCall(isVideo) {
+    if (!activePartner) return;
+
+    try {
+        localStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: isVideo
+        });
+        localVideo.srcObject = localStream;
+
+        callModal.classList.remove('hidden');
+        callUserName.textContent = activePartner.name;
+        callStatusText.textContent = isVideo ? "Calling Video..." : "Calling Voice...";
+        acceptCallBtn.classList.add('hidden');
+
+        peerConnection = new RTCPeerConnection(rtcConfig);
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+        peerConnection.ontrack = (event) => {
+            remoteVideo.srcObject = event.streams[0];
+        };
+
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                socket.emit('iceCandidate', {
+                    targetSocketId: activePartner.socketId,
+                    candidate: event.candidate
+                });
+            }
+        };
+
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+
+        socket.emit('callUser', {
+            targetSocketId: activePartner.socketId,
+            offer: offer,
+            senderName: userName,
+            isVideo: isVideo
+        });
+
+    } catch (err) {
+        alert("Camera/Microphone permission denied.");
+        endCall();
+    }
+}
+
+socket.on('incomingCall', async (data) => {
+    incomingCallData = data;
+    callModal.classList.remove('hidden');
+    callUserName.textContent = data.senderName;
+    callStatusText.textContent = data.isVideo ? "Incoming Video Call..." : "Incoming Voice Call...";
+    acceptCallBtn.classList.remove('hidden');
+});
+
+acceptCallBtn.addEventListener('click', async () => {
+    if (!incomingCallData) return;
+
+    try {
+        localStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: incomingCallData.isVideo
+        });
+        localVideo.srcObject = localStream;
+
+        peerConnection = new RTCPeerConnection(rtcConfig);
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+        peerConnection.ontrack = (event) => {
+            remoteVideo.srcObject = event.streams[0];
+        };
+
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                socket.emit('iceCandidate', {
+                    targetSocketId: incomingCallData.senderSocketId,
+                    candidate: event.candidate
+                });
+            }
+        };
+
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(incomingCallData.offer));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+
+        socket.emit('acceptCall', {
+            targetSocketId: incomingCallData.senderSocketId,
+            answer: answer
+        });
+
+        callStatusText.textContent = "Connected";
+        acceptCallBtn.classList.add('hidden');
+
+    } catch (err) {
+        alert("Could not access camera/mic.");
+        endCall();
+    }
+});
+
+socket.on('callAccepted', async (data) => {
+    callStatusText.textContent = "Connected";
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+});
+
+socket.on('iceCandidate', async (data) => {
+    if (peerConnection) {
+        try {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        } catch (e) {}
+    }
+});
+
+socket.on('callEnded', () => endCallUI());
+
+function endCall() {
+    if (activePartner || incomingCallData) {
+        const target = activePartner ? activePartner.socketId : incomingCallData?.senderSocketId;
+        if (target) socket.emit('endCall', { targetSocketId: target });
+    }
+    endCallUI();
+}
+
+function endCallUI() {
+    if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+    }
+    if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+    }
+    localVideo.srcObject = null;
+    remoteVideo.srcObject = null;
+    callModal.classList.add('hidden');
+    incomingCallData = null;
+}
+
+voiceCallBtn.addEventListener('click', () => startCall(false));
+videoCallBtn.addEventListener('click', () => startCall(true));
+endCallBtn.addEventListener('click', endCall);

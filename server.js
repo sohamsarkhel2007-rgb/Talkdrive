@@ -8,7 +8,7 @@ const io = new Server(server);
 
 app.use(express.static(__dirname));
 
-const users = {}; // socket.id -> username
+const users = {};
 
 io.on('connection', (socket) => {
     socket.on('registerUser', (username) => {
@@ -17,10 +17,30 @@ io.on('connection', (socket) => {
     });
 
     socket.on('privateMessage', (data) => {
-        // Send to target user
         io.to(data.targetSocketId).emit('privateMessage', data);
-        // Echo back to sender
         socket.emit('privateMessage', data);
+    });
+
+    // WebRTC Signaling Handlers
+    socket.on('callUser', (data) => {
+        io.to(data.targetSocketId).emit('incomingCall', {
+            offer: data.offer,
+            senderSocketId: socket.id,
+            senderName: data.senderName,
+            isVideo: data.isVideo
+        });
+    });
+
+    socket.on('acceptCall', (data) => {
+        io.to(data.targetSocketId).emit('callAccepted', { answer: data.answer });
+    });
+
+    socket.on('iceCandidate', (data) => {
+        io.to(data.targetSocketId).emit('iceCandidate', { candidate: data.candidate });
+    });
+
+    socket.on('endCall', (data) => {
+        io.to(data.targetSocketId).emit('callEnded');
     });
 
     socket.on('disconnect', () => {

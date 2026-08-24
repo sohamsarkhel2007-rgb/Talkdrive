@@ -3,23 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebChat - Direct Messaging</title>
+    <title>Talkdrive - Direct Messaging & Calls</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="app-container">
-        <!-- SCREEN 1: CHATS LIST (WhatsApp Home Screen) -->
+        <!-- SCREEN 1: CHATS LIST -->
         <div class="screen" id="chats-screen">
             <div class="app-header">
-                <h2>Chats</h2>
+                <h2>Talkdrive</h2>
                 <span id="my-name-display"></span>
             </div>
             
             <div class="section-title">Online Contacts (Tap to Chat)</div>
-            <ul class="contacts-list" id="contacts-list">
-                <!-- Dynamically populated contacts -->
-            </ul>
+            <ul class="contacts-list" id="contacts-list"></ul>
         </div>
 
         <!-- SCREEN 2: 1-ON-1 PRIVATE CHAT WINDOW -->
@@ -31,11 +29,15 @@
                     <h3 id="chat-partner-name">User</h3>
                     <p id="chat-partner-status">Online</p>
                 </div>
+                <!-- Call Buttons -->
+                <div class="call-actions">
+                    <button id="voice-call-btn" title="Voice Call">📞</button>
+                    <button id="video-call-btn" title="Video Call">📹</button>
+                </div>
             </div>
 
             <div class="chat-messages" id="chat-messages"></div>
 
-            <!-- Emoji Picker -->
             <div class="emoji-picker" id="emoji-picker">
                 <span>😀</span><span>😂</span><span>😍</span><span>🔥</span>
                 <span>👍</span><span>❤️</span><span>🎉</span><span>😎</span>
@@ -49,6 +51,22 @@
                 
                 <input type="text" placeholder="Type a message..." id="message-input">
                 <button id="send-btn">Send</button>
+            </div>
+        </div>
+
+        <!-- CALL OVERLAY SCREEN -->
+        <div class="call-modal hidden" id="call-modal">
+            <div class="video-grid">
+                <video id="remote-video" autoplay playsinline></video>
+                <video id="local-video" autoplay playsinline muted></video>
+            </div>
+            <div class="call-status-info">
+                <h3 id="call-user-name">Calling...</h3>
+                <p id="call-status-text">Connecting...</p>
+            </div>
+            <div class="call-controls">
+                <button id="accept-call-btn" class="call-btn accept hidden">📞 Accept</button>
+                <button id="end-call-btn" class="call-btn end">🚫 End</button>
             </div>
         </div>
     </div>
