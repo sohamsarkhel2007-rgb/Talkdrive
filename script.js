@@ -243,8 +243,11 @@ document.addEventListener("DOMContentLoaded", () => {
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
             peerConnection.ontrack = (event) => {
-                remoteVideo.srcObject = event.streams[0];
-                remoteVideo.play().catch(() => {});
+    if (event.streams && event.streams[0]) {
+        remoteVideo.srcObject = event.streams[0];
+        remoteVideo.play().catch(e => console.log("Remote video play error:", e));
+    }
+};
             };
 
             peerConnection.onicecandidate = (event) => {
