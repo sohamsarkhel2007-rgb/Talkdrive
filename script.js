@@ -1,5 +1,6 @@
 const socket = io();
-
+const msgSound = document.getElementById('msg-sound');
+const ringSound = document.getElementById('ring-sound');
 document.addEventListener("DOMContentLoaded", () => {
     // 1. User Registration Prompt
     const userName = prompt("Enter your name:") || "Anonymous";
