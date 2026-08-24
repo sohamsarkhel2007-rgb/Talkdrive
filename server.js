@@ -7,7 +7,18 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
+// Serve files from 'public' folder OR root directory automatically
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
+
+// Direct fallback route to serve index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'), (err) => {
+        if (err) {
+            res.sendFile(path.join(__dirname, 'index.html'));
+        }
+    });
+});
 
 const users = {};
 
