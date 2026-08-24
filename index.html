@@ -35,14 +35,16 @@
 
             <div id="chat-messages" class="messages-container"></div>
 
-            <div class="input-area">
-                <button id="emoji-btn" class="icon-btn">😊</button>
-                <button id="attach-btn" class="icon-btn">📎</button>
-                <input type="file" id="image-input" accept="image/*" style="display: none;">
-                <input type="text" id="message-input" placeholder="Type a message...">
-                <button id="record-btn" class="icon-btn">🎙️</button>
-                <button id="send-btn" class="send-btn">Send</button>
-            </div>
+<div class="input-area">
+    <button id="emoji-btn" class="icon-btn">😊</button>
+    <button id="attach-btn" class="icon-btn">📎</button>
+    <input type="file" id="file-input" style="display: none;" accept="image/*">
+    
+    <input type="text" id="message-input" placeholder="Type a message..." />
+    
+    <button id="audio-btn" class="icon-btn">🎙️</button>
+    <button id="send-btn" class="send-btn">Send</button>
+</div>
 
             <!-- Emoji Picker -->
             <div id="emoji-picker" class="emoji-picker hidden">
