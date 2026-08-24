@@ -38,7 +38,11 @@ let peerConnection = null;
 let incomingCallData = null;
 
 const rtcConfig = {
-    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+    iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' }
+    ]
 };
 
 myNameDisplay.textContent = `Me: ${userName}`;
@@ -201,6 +205,7 @@ async function startCall(isVideo) {
         callModal.classList.remove('hidden');
         callUserName.textContent = activePartner.name;
         callStatusText.textContent = isVideo ? "Calling Video..." : "Calling Voice...";
+        
         acceptCallBtn.classList.add('hidden');
 
         peerConnection = new RTCPeerConnection(rtcConfig);
