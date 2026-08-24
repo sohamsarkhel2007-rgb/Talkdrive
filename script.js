@@ -41,7 +41,19 @@ const rtcConfig = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' }
+        { urls: 'stun:relays.metered.ca:80' },
+        {
+            urls: 'turn:global.relay.metered.ca:80',
+            username: 'e0183b0f5e1329a239920199',
+            credential: 'X4v9H9s/V2L5+4Bq'
+        },
+        {
+            urls: 'turn:global.relay.metered.ca:443',
+            username: 'e0183b0f5e1329a239920199',
+            credential: 'X4v9H9s/V2L5+4Bq'
+        }
+    ]
+};
     ]
 };
 
