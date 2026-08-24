@@ -3,75 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Talkdrive - Direct Messaging & Calls</title>
+    <title>Talkdrive</title>
     <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-
     <div class="app-container">
-        <!-- SCREEN 1: CHATS LIST -->
-        <div class="screen" id="chats-screen">
-            <div class="app-header">
+        <!-- Contacts Screen -->
+        <div id="chats-screen" class="screen">
+            <header class="app-header">
                 <h2>Talkdrive</h2>
-                <span id="my-name-display"></span>
+                <span id="my-name-display" class="my-name"></span>
+            </header>
+            <div class="contacts-container">
+                <h3>Online Users</h3>
+                <ul id="contacts-list"></ul>
             </div>
-            
-            <div class="section-title">Online Contacts (Tap to Chat)</div>
-            <ul class="contacts-list" id="contacts-list"></ul>
         </div>
 
-        <!-- SCREEN 2: 1-ON-1 PRIVATE CHAT WINDOW -->
-        <div class="screen hidden" id="conversation-screen">
-            <div class="chat-header">
-                <button id="back-btn">←</button>
-                <div class="profile-pic" id="chat-partner-avatar">?</div>
-                <div class="chat-title">
-                    <h3 id="chat-partner-name">User</h3>
-                    <p id="chat-partner-status">Online</p>
+        <!-- Conversation Screen -->
+        <div id="conversation-screen" class="screen hidden">
+            <header class="chat-header">
+                <button id="back-btn" class="icon-btn">←</button>
+                <div id="chat-partner-avatar" class="avatar"></div>
+                <h3 id="chat-partner-name">User</h3>
+                <div class="call-controls">
+                    <button id="voice-call-btn" class="icon-btn">📞</button>
+                    <button id="video-call-btn" class="icon-btn">📹</button>
                 </div>
-                <!-- Call Buttons -->
-                <div class="call-actions">
-                    <button id="voice-call-btn" title="Voice Call">📞</button>
-                    <button id="video-call-btn" title="Video Call">📹</button>
-                </div>
-            </div>
+            </header>
 
-            <div class="chat-messages" id="chat-messages"></div>
+            <div id="chat-messages" class="messages-container"></div>
 
-            <div class="emoji-picker" id="emoji-picker">
-                <span>😀</span><span>😂</span><span>😍</span><span>🔥</span>
-                <span>👍</span><span>❤️</span><span>🎉</span><span>😎</span>
-            </div>
-
-            <div class="chat-input-area">
-                <button id="emoji-btn" title="Choose Emoji">😊</button>
+            <div class="input-area">
+                <button id="emoji-btn" class="icon-btn">😊</button>
+                <button id="attach-btn" class="icon-btn">📎</button>
                 <input type="file" id="image-input" accept="image/*" style="display: none;">
-                <button id="attach-btn" title="Send Image">📎</button>
-                <button id="record-btn" title="Record Audio">🎙️</button>
-                
-                <input type="text" placeholder="Type a message..." id="message-input">
-                <button id="send-btn">Send</button>
+                <input type="text" id="message-input" placeholder="Type a message...">
+                <button id="record-btn" class="icon-btn">🎙️</button>
+                <button id="send-btn" class="send-btn">Send</button>
             </div>
-        </div>
 
-        <!-- CALL OVERLAY SCREEN -->
-        <div class="call-modal hidden" id="call-modal">
-            <div class="video-grid">
-                <video id="remote-video" autoplay playsinline></video>
-                <video id="local-video" autoplay playsinline muted></video>
-            </div>
-            <div class="call-status-info">
-              <button id="accept-call-btn" class="call-btn accept hidden">📞 Accept</button>>
-                <p id="call-status-text">Connecting...</p>
-            </div>
-            <div class="call-controls">
-                <button id="accept-call-btn" class="call-btn accept hidden">📞 Accept</button>
-                <button id="end-call-btn" class="call-btn end">🚫 End</button>
+            <!-- Emoji Picker -->
+            <div id="emoji-picker" class="emoji-picker hidden">
+                <span>😀</span><span>😂</span><span>😍</span><span>👍</span><span>❤️</span>
+                <span>🔥</span><span>🎉</span><span>🙌</span><span>😎</span><span>✨</span>
             </div>
         </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- Video/Voice Call Modal Overlay -->
+    <div id="call-modal" class="call-modal hidden">
+        <div class="video-grid">
+            <video id="remote-video" autoplay playsinline class="remote-video"></video>
+            <video id="local-video" autoplay playsinline muted class="local-video"></video>
+        </div>
+        <div class="call-info">
+            <h3 id="call-user-name">User</h3>
+            <p id="call-status-text">Connecting...</p>
+        </div>
+        <div class="call-actions">
+            <button id="accept-call-btn" class="call-btn accept hidden">📞 Accept</button>
+            <button id="end-call-btn" class="call-btn end">🛑 End</button>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
