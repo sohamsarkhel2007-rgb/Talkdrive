@@ -1,6 +1,5 @@
 const socket = io();
 
-// Get elements safely after script loads
 document.addEventListener("DOMContentLoaded", () => {
     const userName = prompt("Enter your name:") || "Anonymous";
 
@@ -15,11 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const sendBtn = document.getElementById('send-btn');
     const messageInput = document.getElementById('message-input');
     const chatMessages = document.getElementById('chat-messages');
-    const attachBtn = document.getElementById('attach-btn');
-    const imageInput = document.getElementById('image-input');
-    const emojiBtn = document.getElementById('emoji-btn');
-    const emojiPicker = document.getElementById('emoji-picker');
-    const recordBtn = document.getElementById('record-btn');
 
     // Call elements
     const voiceCallBtn = document.getElementById('voice-call-btn');
@@ -35,31 +29,27 @@ document.addEventListener("DOMContentLoaded", () => {
     let activePartner = null;
     const conversations = {};
 
-    // WebRTC State & TURN Servers for video relay across firewalls
     let localStream = null;
     let peerConnection = null;
     let incomingCallData = null;
 
-  const rtcConfig = {
-    iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' },
-        {
-            urls: 'turn:global.relay.metered.ca:80',
-            username: 'e0183b0f5e1329a239920199',
-            credential: 'X4v9H9s/V2L5+4Bq'
-        },
-        {
-            urls: 'turn:global.relay.metered.ca:443',
-            username: 'e0183b0f5e1329a239920199',
-            credential: 'X4v9H9s/V2L5+4Bq'
-        }
-    ],
-    iceCandidatePoolSize: 10
-};
+    const rtcConfig = {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            {
+                urls: 'turn:global.relay.metered.ca:80',
+                username: 'e0183b0f5e1329a239920199',
+                credential: 'X4v9H9s/V2L5+4Bq'
+            },
+            {
+                urls: 'turn:global.relay.metered.ca:443',
+                username: 'e0183b0f5e1329a239920199',
+                credential: 'X4v9H9s/V2L5+4Bq'
             }
-        ]
+        ],
+        iceCandidatePoolSize: 10
     };
 
     if (myNameDisplay) myNameDisplay.textContent = `Me: ${userName}`;
@@ -85,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
             contactsList.appendChild(li);
         }
         if (count === 0) {
-            contactsList.innerHTML = `<li style="padding: 16px; color: #667781; font-size: 13px;">No other users online right now.</li>`;
+            contactsList.innerHTML = `<li style="padding: 16px; color: #64748b; font-size: 13px;">No other users online right now.</li>`;
         }
     });
 
@@ -118,12 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('message', isSelf ? 'sent' : 'received');
 
-        let content = "";
-        if (data.image) content += `<img src="${data.image}" class="chat-img"/>`;
-        if (data.audio) content += `<audio controls src="${data.audio}"></audio>`;
-        if (data.text) content += `<p>${data.text}</p>`;
-        content += `<span class="time">${data.time}</span>`;
-
+        let content = `<p>${data.text}</p><span class="time">${data.time}</span>`;
         msgDiv.innerHTML = content;
         chatMessages.appendChild(msgDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -139,85 +124,30 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    function sendPrivatePayload(payload) {
-        if (!activePartner) return;
+    sendBtn.addEventListener('click', () => {
+        const text = messageInput.value.trim();
+        if (!text || !activePartner) return;
+
         const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const data = {
-            text: payload.text || "",
-            image: payload.image || null,
-            audio: payload.audio || null,
+            text: text,
             time: time,
             senderId: socket.id,
             targetSocketId: activePartner.socketId
         };
-        socket.emit('privateMessage', data);
-    }
 
-    sendBtn.addEventListener('click', () => {
-        const text = messageInput.value.trim();
-        if (!text) return;
-        sendPrivatePayload({ text });
+        socket.emit('privateMessage', data);
         messageInput.value = "";
     });
 
     messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendBtn.click(); });
 
-    emojiBtn.addEventListener('click', () => emojiPicker.classList.toggle('active'));
-    emojiPicker.querySelectorAll('span').forEach(span => {
-        span.addEventListener('click', () => {
-            messageInput.value += span.textContent;
-            emojiPicker.classList.remove('active');
-            messageInput.focus();
-        });
-    });
-
-    attachBtn.addEventListener('click', () => imageInput.click());
-    imageInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (evt) => sendPrivatePayload({ image: evt.target.result });
-        reader.readAsDataURL(file);
-        imageInput.value = "";
-    });
-
-    let mediaRecorder, audioChunks = [], isRecording = false;
-    recordBtn.addEventListener('click', async () => {
-        if (!isRecording) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader();
-                    reader.onload = (evt) => sendPrivatePayload({ audio: evt.target.result });
-                    reader.readAsDataURL(blob);
-                    stream.getTracks().forEach(t => t.stop());
-                };
-                mediaRecorder.start();
-                isRecording = true;
-                recordBtn.classList.add('recording');
-            } catch (err) { alert("Mic unavailable"); }
-        } else {
-            mediaRecorder.stop();
-            isRecording = false;
-            recordBtn.classList.remove('recording');
-        }
-    });
-
-    // --- WEBRTC CALL HANDLERS ---
-
+    // WebRTC Calls
     async function startCall(isVideo) {
         if (!activePartner) return;
 
         try {
-            localStream = await navigator.mediaDevices.getUserMedia({
-                audio: true,
-                video: isVideo
-            });
-
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: isVideo });
             localVideo.srcObject = localStream;
             await localVideo.play().catch(() => {});
 
@@ -234,14 +164,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 remoteVideo.play().catch(() => {});
             };
 
-peerConnection.onicecandidate = (event) => {
-    if (event.candidate) {
-        socket.emit('iceCandidate', {
-            targetSocketId: targetId,
-            candidate: event.candidate
-        });
-    }
-};
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socket.emit('iceCandidate', {
+                        targetSocketId: activePartner.socketId,
+                        candidate: event.candidate
                     });
                 }
             };
@@ -332,7 +259,7 @@ peerConnection.onicecandidate = (event) => {
         }
     });
 
-    socket.on('callEnded', () => endCallUI());
+    socket.on('callEnded', () => { endCallUI(); });
 
     function endCall() {
         if (activePartner || incomingCallData) {
