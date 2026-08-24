@@ -200,19 +200,22 @@ async function startCall(isVideo) {
             audio: true,
             video: isVideo
         });
+        
         localVideo.srcObject = localStream;
+        await localVideo.play().catch(() => {});
 
+        // Explicitly hide accept button on caller side
+        acceptCallBtn.classList.add('hidden');
         callModal.classList.remove('hidden');
         callUserName.textContent = activePartner.name;
         callStatusText.textContent = isVideo ? "Calling Video..." : "Calling Voice...";
-        
-        acceptCallBtn.classList.add('hidden');
 
         peerConnection = new RTCPeerConnection(rtcConfig);
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
         peerConnection.ontrack = (event) => {
             remoteVideo.srcObject = event.streams[0];
+            remoteVideo.play().catch(() => {});
         };
 
         peerConnection.onicecandidate = (event) => {
@@ -235,7 +238,7 @@ async function startCall(isVideo) {
         });
 
     } catch (err) {
-        alert("Camera/Microphone permission denied.");
+        alert("Camera or Microphone permissions were blocked in your browser.");
         endCall();
     }
 }
@@ -256,13 +259,16 @@ acceptCallBtn.addEventListener('click', async () => {
             audio: true,
             video: incomingCallData.isVideo
         });
+        
         localVideo.srcObject = localStream;
+        await localVideo.play().catch(() => {});
 
         peerConnection = new RTCPeerConnection(rtcConfig);
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
         peerConnection.ontrack = (event) => {
             remoteVideo.srcObject = event.streams[0];
+            remoteVideo.play().catch(() => {});
         };
 
         peerConnection.onicecandidate = (event) => {
@@ -294,7 +300,9 @@ acceptCallBtn.addEventListener('click', async () => {
 
 socket.on('callAccepted', async (data) => {
     callStatusText.textContent = "Connected";
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+    if (peerConnection) {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+    }
 });
 
 socket.on('iceCandidate', async (data) => {
